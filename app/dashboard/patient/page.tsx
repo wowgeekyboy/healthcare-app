@@ -17,7 +17,15 @@ import { Calendar, Clock, Video } from "lucide-react";
 import Link from "next/link";
 
 export default function PatientDashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  if (!session) {
+    return <div>Please log in to view your dashboard.</div>;
+  }
 
   return (
     <div className="container py-10">

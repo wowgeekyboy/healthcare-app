@@ -39,10 +39,10 @@ export async function POST(req: Request) {
       },
     });
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
-
-    return NextResponse.json(userWithoutPassword, { status: 201 });
+    return NextResponse.json(
+      { message: "User created successfully" },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

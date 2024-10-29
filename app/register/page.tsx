@@ -21,45 +21,50 @@ export default function RegisterPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsLoading(true);
 
+  try {
     const formData = new FormData(e.currentTarget);
     const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-      role: formData.get("role"),
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      role: formData.get("role") as string,
     };
 
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+      cache: 'no-store',
+    });
 
-      if (response.ok) {
-        toast({
-          title: "Registration Successful",
-          description: "You can now sign in with your credentials.",
-        });
-        router.push("/login");
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-    } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Registration failed");
     }
-  };
+
+    toast({
+      title: "Success",
+      description: "Registration successful! Please login.",
+    });
+
+    router.push("/login");
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Registration failed",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-10">

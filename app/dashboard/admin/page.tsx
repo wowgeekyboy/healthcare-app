@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,42 +14,61 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Calendar, Users, Clock, Video } from "lucide-react";
+import { Calendar, Users, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { data: session } = useSession();
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return null; // Or redirect to login
-  }
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch('/api/appointments');
+        if (!response.ok) throw new Error('Failed to fetch appointments');
+        const data = await response.json();
+        setAppointments(data);
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const todayAppointments = appointments.filter(
+    (apt) => format(new Date(apt.date), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
+  );
+
+  const stats = [
+    {
+      title: "Total Appointments",
+      value: appointments.length,
+      icon: Calendar,
+      color: "text-blue-500",
+    },
+    {
+      title: "Today's Appointments",
+      value: todayAppointments.length,
+      icon: Clock,
+      color: "text-orange-500",
+    },
+    {
+      title: "Total Patients",
+      value: new Set(appointments.map(apt => apt.patientEmail)).size,
+      icon: Users,
+      color: "text-green-500",
+    },
+  ];
 
   return (
     <div className="container py-10">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-      </div>
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Admin Dashboard</h1>
 
       <div className="grid gap-6 md:grid-cols-3 mb-8">
-        {[
-          {
-            title: "Total Appointments",
-            value: "24",
-            icon: Calendar,
-            color: "text-blue-500",
-          },
-          {
-            title: "Total Users",
-            value: "156",
-            icon: Users,
-            color: "text-green-500",
-          },
-          {
-            title: "Active Doctors",
-            value: "8",
-            icon: Clock,
-            color: "text-orange-500",
-          },
-        ].map((stat, index) => (
+        {stats.map((stat, index) => (
           <Card key={index} className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -62,12 +81,63 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <Tabs defaultValue="appointments" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="appointments">Appointments</TabsTrigger>
-          <TabsTrigger value="doctors">Doctors</TabsTrigger>
-          <TabsTrigger value="patients">Patients</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="appointments">All Appointments</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Today's Appointments</h2>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Specialty</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                ) : todayAppointments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No appointments for today</TableCell>
+                  </TableRow>
+                ) : (
+                  todayAppointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>{appointment.patientName}</TableCell>
+                      <TableCell>{appointment.time}</TableCell>
+                      <TableCell>{appointment.specialty}</TableCell>
+                      <TableCell>
+                        <Badge variant={appointment.status === "confirmed" ? "default" : "secondary"}>
+                          {appointment.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {appointment.status === "pending" ? (
+                          <Button size="sm">Confirm</Button>
+                        ) : (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={appointment.meetLink} target="_blank" rel="noopener noreferrer">
+                              Join Meet
+                            </a>
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="appointments">
           <Card className="p-6">
@@ -76,145 +146,40 @@ export default function AdminDashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Patient</TableHead>
-                  <TableHead>Doctor</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[
-                  {
-                    patient: "John Smith",
-                    doctor: "Dr. Sarah Johnson",
-                    date: new Date(),
-                    time: "10:00 AM",
-                    status: "confirmed",
-                  },
-                  {
-                    patient: "Emma Wilson",
-                    doctor: "Dr. Michael Chen",
-                    date: new Date(),
-                    time: "11:30 AM",
-                    status: "pending",
-                  },
-                ].map((appointment, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{appointment.patient}</TableCell>
-                    <TableCell>{appointment.doctor}</TableCell>
-                    <TableCell>
-                      {format(appointment.date, "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>{appointment.time}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          appointment.status === "confirmed"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {appointment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="doctors">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Registered Doctors</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
                   <TableHead>Specialty</TableHead>
-                  <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {[
-                  {
-                    name: "Dr. Sarah Johnson",
-                    specialty: "General Practice",
-                    email: "sarah.johnson@example.com",
-                    status: "active",
-                  },
-                  {
-                    name: "Dr. Michael Chen",
-                    specialty: "Cardiology",
-                    email: "michael.chen@example.com",
-                    status: "active",
-                  },
-                ].map((doctor, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{doctor.name}</TableCell>
-                    <TableCell>{doctor.specialty}</TableCell>
-                    <TableCell>{doctor.email}</TableCell>
-                    <TableCell>
-                      <Badge>{doctor.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline">
-                        Manage
-                      </Button>
-                    </TableCell>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="patients">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Registered Patients</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[
-                  {
-                    name: "John Smith",
-                    email: "john.smith@example.com",
-                    joined: new Date(),
-                  },
-                  {
-                    name: "Emma Wilson",
-                    email: "emma.wilson@example.com",
-                    joined: new Date(),
-                  },
-                ].map((patient, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{patient.name}</TableCell>
-                    <TableCell>{patient.email}</TableCell>
-                    <TableCell>
-                      {format(patient.joined, "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline">
-                        View History
-                      </Button>
-                    </TableCell>
+                ) : appointments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">No appointments found</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  appointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>{appointment.patientName}</TableCell>
+                      <TableCell>{format(new Date(appointment.date), "MMM d, yyyy")}</TableCell>
+                      <TableCell>{appointment.time}</TableCell>
+                      <TableCell>{appointment.specialty}</TableCell>
+                      <TableCell>
+                        <Badge variant={appointment.status === "confirmed" ? "default" : "secondary"}>
+                          {appointment.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline">View Details</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </Card>

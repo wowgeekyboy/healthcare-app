@@ -38,19 +38,42 @@ export default function BookingForm({ date, time, onClose }: BookingFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          phone: formData.get("phone"),
+          specialty: formData.get("specialty"),
+          symptoms: formData.get("symptoms"),
+          date,
+          time,
+        }),
+      });
 
-    toast({
-      title: "Appointment Booked!",
-      description: `Your appointment has been scheduled for ${format(
-        date,
-        "MMMM d, yyyy"
-      )} at ${time}. Check your email for the Google Meet link.`,
-    });
+      if (!response.ok) throw new Error("Failed to book appointment");
 
-    setIsLoading(false);
-    onClose();
+      toast({
+        title: "Appointment Booked!",
+        description: `Your appointment has been scheduled for ${format(date, "MMMM d, yyyy")} at ${time}.`,
+      });
+
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to book appointment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,12 +83,13 @@ export default function BookingForm({ date, time, onClose }: BookingFormProps) {
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
-            <Input id="name" placeholder="John Doe" required />
+            <Input id="name" name="name" placeholder="John Doe" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="john@example.com"
               required
@@ -75,6 +99,7 @@ export default function BookingForm({ date, time, onClose }: BookingFormProps) {
             <Label htmlFor="phone">Phone Number</Label>
             <Input
               id="phone"
+              name="phone"
               type="tel"
               placeholder="+1 (555) 000-0000"
               required
@@ -82,7 +107,7 @@ export default function BookingForm({ date, time, onClose }: BookingFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="specialty">Specialty Required</Label>
-            <Select required>
+            <Select name="specialty" required>
               <SelectTrigger>
                 <SelectValue placeholder="Select specialty" />
               </SelectTrigger>
@@ -96,25 +121,17 @@ export default function BookingForm({ date, time, onClose }: BookingFormProps) {
             </Select>
           </div>
         </div>
-
         <div className="space-y-2">
-          <Label htmlFor="symptoms">Symptoms or Concerns</Label>
+          <Label htmlFor="symptoms">Symptoms (Optional)</Label>
           <Textarea
             id="symptoms"
-            placeholder="Please describe your symptoms or concerns"
-            className="min-h-[100px]"
-            required
+            name="symptoms"
+            placeholder="Briefly describe your symptoms..."
           />
         </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Booking..." : "Confirm Booking"}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Booking..." : "Confirm Booking"}
+        </Button>
       </form>
     </Card>
   );
