@@ -1,0 +1,23 @@
+Admin User:
+Email: admin@healthbook.com
+Password: Admin123!
+
+Doctor Users:
+1. Dr. Sarah Johnson
+Email: sarah.johnson@healthbook.com
+Password: Doctor123!
+Specialty: General Practice
+
+2. Dr. Michael Chen
+Email: michael.chen@healthbook.com
+Password: Doctor123!
+Specialty: Cardiology
+
+Patient Users:
+1. John Smith
+Email: john.smith@example.com
+Password: Patient123!
+
+2. Emma Wilson
+Email: emma.wilson@example.com
+Password: Patient123!
