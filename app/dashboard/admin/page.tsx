@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,128 +16,59 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Calendar, Users, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
+  const { data: session, status } = useSession();
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/login");
+    }
+    if (session?.user?.role !== "ADMIN") {
+      redirect("/");
+    }
+  }, [session, status]);
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/appointments');
-        if (!response.ok) throw new Error('Failed to fetch appointments');
+        if (!response.ok) {
+          throw new Error('Failed to fetch appointments');
+        }
         const data = await response.json();
         setAppointments(data);
-      } catch (error) {
-        console.error('Error fetching appointments:', error);
+      } catch (err) {
+        console.error('Error fetching appointments:', err);
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchAppointments();
-  }, []);
-
-  const todayAppointments = appointments.filter(
-    (apt) => format(new Date(apt.date), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
-  );
-
-  const stats = [
-    {
-      title: "Total Appointments",
-      value: appointments.length,
-      icon: Calendar,
-      color: "text-blue-500",
-    },
-    {
-      title: "Today's Appointments",
-      value: todayAppointments.length,
-      icon: Clock,
-      color: "text-orange-500",
-    },
-    {
-      title: "Total Patients",
-      value: new Set(appointments.map(apt => apt.patientEmail)).size,
-      icon: Users,
-      color: "text-green-500",
-    },
-  ];
+    if (session) {
+      fetchAppointments();
+    }
+  }, [session]);
 
   return (
     <div className="container py-10">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Admin Dashboard</h1>
-
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
-        {stats.map((stat, index) => (
-          <Card key={index} className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-              <stat.icon className={`h-8 w-8 ${stat.color}`} />
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="overview" onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="appointments">All Appointments</TabsTrigger>
+          <TabsTrigger value="appointments">Appointments</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="overview">
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Today's Appointments</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Specialty</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
-                  </TableRow>
-                ) : todayAppointments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">No appointments for today</TableCell>
-                  </TableRow>
-                ) : (
-                  todayAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>{appointment.patientName}</TableCell>
-                      <TableCell>{appointment.time}</TableCell>
-                      <TableCell>{appointment.specialty}</TableCell>
-                      <TableCell>
-                        <Badge variant={appointment.status === "confirmed" ? "default" : "secondary"}>
-                          {appointment.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {appointment.status === "pending" ? (
-                          <Button size="sm">Confirm</Button>
-                        ) : (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={appointment.meetLink} target="_blank" rel="noopener noreferrer">
-                              Join Meet
-                            </a>
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <h2 className="text-xl font-semibold mb-4">Overview</h2>
+            {/* Add overview content here */}
           </Card>
         </TabsContent>
 
@@ -175,7 +108,13 @@ export default function AdminDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">View Details</Button>
+                        {appointment.status === "pending" ? (
+                          <Button size="sm" onClick={() => handleConfirmAppointment(appointment.id)}>
+                            Confirm
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline">View Details</Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

@@ -35,7 +35,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="outline" asChild>
-                  <Link href="/admin">
+                  <Link href="/dashboard/admin">
                     <UserCog className="mr-2 h-4 w-4" />
                     Admin Dashboard
                   </Link>

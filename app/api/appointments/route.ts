@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-// Configure nodemailer with OAuth2
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -11,6 +10,27 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_APP_PASSWORD,
   },
 });
+
+export async function GET() {
+  try {
+    const appointments = await prisma.appointment.findMany({
+      include: {
+        patient: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return NextResponse.json(appointments);
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch appointments" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +42,7 @@ export async function POST(req: Request) {
       where: { email }
     });
 
+    // Save appointment to database
     let userId;
     if (!existingUser) {
       // Create new user if doesn't exist
@@ -73,7 +94,7 @@ export async function POST(req: Request) {
           <li>Time: ${time}</li>
           <li>Specialty: ${specialty}</li>
         </ul>
-      `,
+      `
     });
 
     return NextResponse.json({ success: true, appointment });
