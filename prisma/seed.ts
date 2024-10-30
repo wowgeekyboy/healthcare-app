@@ -17,22 +17,11 @@ async function main() {
   });
 
   // Create doctors
-  const doctors = [
-    {
-      email: 'sarah.johnson@healthbook.com',
-      name: 'Dr. Sarah Johnson',
-      password: 'Doctor@123',
-      specialty: 'General Practice',
-      bio: 'Dr. Johnson has over 15 years of experience in general practice and preventive medicine.',
-    },
-    {
-      email: 'michael.chen@healthbook.com',
-      name: 'Dr. Michael Chen',
-      password: 'Doctor@123',
-      specialty: 'Cardiology',
-      bio: 'Specialized in cardiovascular health with a focus on preventive cardiology.',
-    },
-  ];
+ const doctors = [
+  { id: 1, name: "Doctor X", email: "doctorx@example.com", appointments: [] },
+  { id: 2, name: "Doctor Y", email: "doctory@example.com", appointments: [] },
+  { id: 3, name: "Doctor Z", email: "doctorz@example.com", appointments: [] },
+];
 
   for (const doctor of doctors) {
     await prisma.user.upsert({

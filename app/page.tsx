@@ -15,10 +15,10 @@ export default function Home() {
     <>
       {/* Hero Section */}
       <section className="relative bg-background py-20">
-        <div className="container">
+        <div className="container mx-auto">
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
             <div className="space-y-8">
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl">
                 Your Health Journey Begins With a Simple Click
               </h1>
               <p className="text-lg text-muted-foreground">
@@ -63,10 +63,10 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="border-t bg-muted/40 py-20">
-        <div className="container">
+        <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-              Why Choose HealthBook Pro?
+              Why Choose Gynoveda?
             </h2>
             <p className="mt-4 text-muted-foreground">
               Experience healthcare reimagined for the modern age
@@ -112,7 +112,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-20">
-        <div className="container">
+        <div className="container mx-auto">
           <div className="rounded-2xl bg-primary px-8 py-12 text-primary-foreground">
             <div className="grid gap-8 md:grid-cols-2 items-center">
               <div>

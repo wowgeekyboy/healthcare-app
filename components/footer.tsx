@@ -1,22 +1,16 @@
+"use client";
+
+import { Button } from "@/components/ui/button"; // Ensure this import is present
+import { Facebook, Twitter, Instagram, Linkedin, Phone, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Linkedin,
-  Phone,
-  Mail,
-  MapPin
-} from "lucide-react";
 
 export default function Footer() {
   return (
     <footer className="w-full border-t bg-background">
-      <div className="container py-12">
+      <div className="container py-12 mx-auto">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">HealthBook Pro</h3>
+            <h3 className="text-lg font-semibold">Gynoveda</h3>
             <p className="text-sm text-muted-foreground">
               Making healthcare accessible through modern technology.
             </p>
@@ -71,7 +65,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>contact@healthbookpro.com</span>
+                <span>contact@gynoveda.com</span>
               </li>
               <li className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
@@ -103,7 +97,7 @@ export default function Footer() {
         </div>
         
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} HealthBook Pro. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Gynoveda. All rights reserved.</p>
         </div>
       </div>
     </footer>

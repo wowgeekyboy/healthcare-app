@@ -76,7 +76,7 @@ export default function PatientDashboard() {
             ) : (
               appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{appointment.doctor?.name || 'Pending'}</TableCell>
+                  <TableCell>{appointment.doctorName || 'Pending'}</TableCell>
                   <TableCell>{format(new Date(appointment.date), "MMM d, yyyy")}</TableCell>
                   <TableCell>{appointment.time}</TableCell>
                   <TableCell>

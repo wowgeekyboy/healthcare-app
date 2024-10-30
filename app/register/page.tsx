@@ -72,7 +72,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Create an Account</h1>
           <p className="text-sm text-muted-foreground">
-            Join HealthBook Pro to access our services
+            Join Gynoveda to access our services
           </p>
         </div>
 

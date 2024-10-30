@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,29 +10,80 @@ import { BookingDialog } from "@/components/booking/booking-dialog";
 import { TimeSlot } from "@/types/appointment";
 
 const AVAILABLE_TIMES: TimeSlot[] = [
-  { time: "10:00", available: true },
-  { time: "10:30", available: true },
-  { time: "11:00", available: false },
-  { time: "11:30", available: true },
-  { time: "12:00", available: true },
-  { time: "12:30", available: false },
-  { time: "14:00", available: true },
-  { time: "14:30", available: true },
-  { time: "15:00", available: true },
-  { time: "15:30", available: false },
-  { time: "16:00", available: true },
-  { time: "16:30", available: true },
+  { time: "10:00 AM", available: true },
+  { time: "10:30 AM", available: true },
+  { time: "11:00 AM", available: false },
+  { time: "11:30 AM", available: true },
+  { time: "12:00 PM", available: true },
+  { time: "12:30 PM", available: false },
+  { time: "1:00 PM", available: true },
+  { time: "1:30 PM", available: true },
+  { time: "2:00 PM", available: true },
+  { time: "2:30 PM", available: true },
+  { time: "3:00 PM", available: true },
+  { time: "3:30 PM", available: false },
+  { time: "4:00 PM", available: true },
+  { time: "4:30 PM", available: true },
 ];
 
 export default function BookAppointment() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [appointments, setAppointments] = useState([]);
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
     setShowDialog(true);
   };
+
+const handleBooking = async () => {
+  if (!date || !selectedTime) return;
+
+  const response = await fetch('/api/book-appointment', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      patientName: session.user.name, // Assuming you have the patient's name from the session
+      date: date.toISOString().split('T')[0], // Format date as needed
+      time: selectedTime,
+    }),
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    console.log(data.message); // Success message
+    // Optionally reset the form or show a success dialog
+  } else {
+    const errorData = await response.json();
+    console.error('Error:', errorData.error);
+  }
+};
+
+  const getAvailableTimeSlots = (appointments, selectedDate) => {
+    const bookedSlots = appointments
+      .filter(appointment => appointment.date === selectedDate)
+      .map(appointment => appointment.time);
+
+    return AVAILABLE_TIMES.filter(slot => !bookedSlots.includes(slot.time));
+  };
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await fetch('/api/appointments');
+        if (!response.ok) throw new Error('Failed to fetch appointments');
+        const data = await response.json();
+        setAppointments(data);
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
 
   return (
     <div className="container py-10">
@@ -69,7 +120,7 @@ export default function BookAppointment() {
           {date ? (
             <ScrollArea className="h-[300px] pr-4">
               <div className="grid grid-cols-2 gap-4">
-                {AVAILABLE_TIMES.map((slot) => (
+                {getAvailableTimeSlots(appointments, date).map((slot) => (
                   <Button
                     key={slot.time}
                     variant={selectedTime === slot.time ? "default" : "outline"}

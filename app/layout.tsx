@@ -11,7 +11,7 @@ import AuthProvider from "@/components/providers/session-provider";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'HealthBook Pro | Modern Healthcare Appointment System',
+  title: 'Gynoveda | Modern Healthcare Appointment System',
   description: 'Book your healthcare appointments seamlessly with our modern booking system',
 };
 
