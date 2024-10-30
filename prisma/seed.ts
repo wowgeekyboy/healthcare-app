@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 async function main() {
   // Create admin
   await prisma.user.upsert({
-    where: { email: 'admin@healthbook.com' },
+    where: { email: 'admin@example.com' },
     update: {},
     create: {
-      email: 'admin@healthbook.com',
+      email: 'admin@example.com',
       name: 'Admin User',
       password: await bcrypt.hash('Admin@123', 10),
       role: 'ADMIN',
@@ -17,18 +17,19 @@ async function main() {
   });
 
   // Create doctors
- const doctors = [
-  { id: 1, name: "Doctor X", email: "doctorx@example.com", appointments: [] },
-  { id: 2, name: "Doctor Y", email: "doctory@example.com", appointments: [] },
-  { id: 3, name: "Doctor Z", email: "doctorz@example.com", appointments: [] },
-];
+  const doctors = [
+    { name: "Doctor X", email: "doctorx@example.com", password: "Doctor@123!" },
+    { name: "Doctor Y", email: "doctory@example.com", password: "Doctor@123!" },
+    { name: "Doctor Z", email: "doctorz@example.com", password: "Doctor@123!" },
+  ];
 
   for (const doctor of doctors) {
     await prisma.user.upsert({
       where: { email: doctor.email },
       update: {},
       create: {
-        ...doctor,
+        name: doctor.name,
+        email: doctor.email,
         password: await bcrypt.hash(doctor.password, 10),
         role: 'DOCTOR',
       },
